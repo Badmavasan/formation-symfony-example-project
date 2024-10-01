@@ -13,22 +13,35 @@ use Symfony\Component\Routing\Attribute\Route;
 
 class ProductController extends AbstractController
 {
-    #[Route('/product', name: 'app_product', methods: 'GET')]
-    public function index(ProductRepository $productRepository): Response
+    #[Route('/product', name: 'app_product')]
+    public function index(Request $request, ProductRepository $productRepository): Response
     {
 
+        // Retrieve all products
         $products = $productRepository->findAll();
 
+        // Handle the form for adding a product
+        $product = new Product();
+        $form = $this->createForm(ProductType::class, $product);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            // Save the new product to the database
+            $productRepository->save($product);
+
+            // Redirect to the same page
+            return $this->redirectToRoute('app_product');
+        }
+
         return $this->render('product/index.html.twig', [
-            'controller_name' => 'ProductController',
-            'products' => $products
+            'products' => $products,
+            'form' => $form->createView(),
         ]);
     }
 
     #[Route('/product/insert', name: 'app_product_insert')]
     public function insert(Request $request, ProductRepository $productRepository): Response
     {
-
         $product = new Product();
         $form = $this->createForm(ProductType::class, $product);
 
@@ -77,23 +90,13 @@ class ProductController extends AbstractController
         ]);
     }
 
-    #[Route('/product/delete/{id}', name: 'app_product_delete', methods: 'GET')]
-    public function delete(int $id, ProductRepository $productRepository){
-        // Verifier si le product est dans la base de données
-        $product = $productRepository->find($id);
-        // SI oui , on supprime
-        if (!$product) {
-            return $this->render('product/delete.html.twig', [
-                'controller_name' => 'ProductController',
-                'delete' => 'Failed, Product not found'
-            ]);
-        }
-
+    #[Route('/products/delete/{id}', name: 'product_delete')]
+    public function delete(Product $product, ProductRepository $productRepository): Response
+    {
+        // Delete the product
         $productRepository->delete($product);
 
-        return $this->render('product/delete.html.twig', [
-            'controller_name' => 'ProductController',
-            'delete' => 'Good'
-        ]);
+        // Redirect to the same page
+        return $this->redirectToRoute('app_product');
     }
 }
