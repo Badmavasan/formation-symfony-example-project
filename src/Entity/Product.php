@@ -16,16 +16,6 @@ class Product
     #[ORM\Column(length: 255)]
     private ?string $name = null;
 
-    /**
-     * @param int|null $id
-     * @param string|null $name
-     */
-    public function __construct(?string $name)
-    {
-        $this->name = $name;
-    }
-
-
     public function getId(): ?int
     {
         return $this->id;

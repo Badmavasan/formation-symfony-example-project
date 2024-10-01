@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Product;
+use App\Form\ProductType;
 use App\Repository\ProductRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -24,17 +25,26 @@ class ProductController extends AbstractController
         ]);
     }
 
-    #[Route('/product/insert', name: 'app_product_insert', methods: 'GET')]
-    public function insert(ProductRepository $productRepository): Response
+    #[Route('/product/insert', name: 'app_product_insert')]
+    public function insert(Request $request, ProductRepository $productRepository): Response
     {
 
-        $product = new Product("Dell XPS");
+        $product = new Product();
+        $form = $this->createForm(ProductType::class, $product);
 
-        $productRepository->save($product);
+        $form->handleRequest($request);
+
+        if($form->isSubmitted() && $form->isValid()){
+            $productRepository->save($product);
+
+            return $this->render('product/insert.html.twig', [
+                'controller_name' => 'ProductController',
+                'insertion' => 'Good'
+            ]);
+        }
 
         return $this->render('product/insert.html.twig', [
-            'controller_name' => 'ProductController',
-            'insertion' => 'Good'
+            'form' => $form->createView(),
         ]);
     }
 
